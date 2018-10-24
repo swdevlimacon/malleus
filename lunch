@@ -73,7 +73,7 @@ pkgtcinstall() {
 		printmsg "Building and installing toolchain package: '"$package"'"
 		cd $TCREPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
-		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --root $TOOLS --noconfirm
+		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --root $TOOLS --force --noconfirm
 		rm -rf $PACKAGES/host-$package-*.pkg.tar.xz
 	done
 }
