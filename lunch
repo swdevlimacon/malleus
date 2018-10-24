@@ -5,17 +5,44 @@
 
 set -e
 
+# Usage
+usage() {
+	cat <<EOF
+lunch - small and simple Limacon build system
+
+Host:
+Usage:	BARCH=[supported architecture] ./lunch [option]
+
+	toolchain		Build RISC-V toolchain
+	bootstrap		Build RISC-V chroot system
+	enter-chroot		Enter to the chroot system
+	tarball			Make tarball archive with filesystem
+	usage			Show this information
+	version			Show version information
+
+Target:
+Usage:	lunch [option] [package1, package2]
+
+	package			Build specific package
+	upackage		Update specific package
+	viewsums		View md5sums for specific package
+	order			Build specific group of packages
+	usage			Show this information
+	version			Show version information
+
+EOF
+	exit 0
+}
+
 # Message commands
 printmsg() {
 	local msg=$(echo $1 | tr -s / /)
 	printf "\e[1m\e[32m==>\e[0m $msg\n"
-	sleep 1
 }
 
 printmsgerror() {
 	local msg=$(echo $1 | tr -s / /)
 	printf "\e[1m\e[31m==!\e[0m $msg\n"
-	sleep 1
 	exit 1
 }
 
@@ -38,6 +65,7 @@ pkgchinstall() {
 		cd $CHREPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f --skipinteg -f
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+		rm -rf $PACKAGES/chroot-$package-*.pkg.tar.xz
 	done
 }
 
@@ -49,6 +77,7 @@ pkgtcinstall() {
 		cd $TCREPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $TOOLS --noconfirm
+		rm -rf $PACKAGES/host-$package-*.pkg.tar.xz
 	done
 }
 
@@ -101,3 +130,124 @@ initdb() {
 		mkdir -p $dbindir/var/lib/pacman
 	done
 }
+
+# Check for root
+check_for_root() {
+	if [[ $EUID -ne 0 ]]; then
+		printmsgerror "This script must be run as root" 
+	fi
+}
+
+# Architrecture selection
+setup_architecture() {
+	case $BARCH in
+		riscv32)
+			printmsg "Using configuration for riscv32"
+			export XHOST="$(echo ${MACHTYPE} | sed -e 's/-[^-]*/-cross/')"
+			export XTARGET="riscv32-linux-musl"
+			export XKARCH="riscv"
+			export GCCOPTS="--with-arch=rv32imafdc"
+			;;
+		riscv64)
+			printmsg "Using configuration for riscv64"
+			export XHOST="$(echo ${MACHTYPE} | sed -e 's/-[^-]*/-cross/')"
+			export XTARGET="riscv64-linux-musl"
+			export XKARCH="riscv"
+			export GCCOPTS="--with-arch=rv64imafdc"
+			;;
+		*)
+			printmsgerror "BARCH variable is not set or supported"
+	esac
+}
+
+# Append directory paths, *FLAGS and host tools
+setup_environment() {
+	printmsg "Setting up envirinment"
+
+	# Common paths
+	export CWD="$(pwd)"
+	export REPO="$CWD/packages"
+	export CHREPO="$CWD/chroot"
+	export TCREPO="$CWD/toolchain"
+	export ORDERS="$CWD/orders"
+
+	# Build paths
+	export BUILD="$CWD/build-$BARCH"
+	export SOURCES="$BUILD/sources"
+	export ROOTFS="$BUILD/rootfs"
+	export TOOLS="$BUILD/toolchain"
+	export PACKAGES="$BUILD/packages"
+	export TARBUILD="$BUILD/tarbuild"
+
+	# Host setup
+	export PATH="$TOOLS/bin:$PATH"
+	export HOSTCC="gcc"
+	export HOSTCXX="g++"
+
+	if [ -z $MKJOBS ]; then
+		export MKJOBS="$(expr $(nproc) + 1)"
+	fi
+	export MKOPTS="-j$MKJOBS"
+
+	export CFLAGS="-Os -g0 -s -pipe"
+	export CXXFLAGS="$CFLAGS"
+}
+
+build_environment() {
+	printmsg "Building envirinment"
+
+	rm -rf $BUILD
+	mkdir -p $BUILD $SOURCES $ROOTFS $TOOLS $PACKAGES $TARBUILD
+
+	initdb $TOOLS $ROOTFS
+
+	cp -a $TCREPO/makepkg.conf $BUILD/host-makepkg.conf
+	cp -a $CHREPO/makepkg.conf $BUILD/target-makepkg.conf
+
+	for files in $BUILD/host-makepkg.conf $BUILD/target-makepkg.conf; do
+		sed -i $files \
+			-e "s|@CARCH[@]|$BARCH|g" \
+			-e "s|@CHOST[@]|$XTARGET|g" \
+			-e "s|@CFLAGS[@]|$CFLAGS|g" \
+			-e "s|@CXXFLAGS[@]|$CXXFLAGS|g" \
+			-e "s|@MKOPTS[@]|$MKOPTS|g" \
+			-e "s|@PKGS[@]|$PACKAGES|g" \
+			-e "s|@SOURCES[@]|$SOURCES|g" \
+			-e "s|@ROOTFS[@]|$ROOTFS|g" \
+			-e "s|@TOOLS[@]|$TOOLS|g" \
+			-e "s|@XHOST[@]|$XHOST|g" \
+			-e "s|@XTARGET[@]|$XTARGET|g" \
+			-e "s|@XKARCH[@]|$XKARCH|g" \
+			-e "s|@GCCOPTS[@]|$GCCOPTS|g" \
+			-e "s|@HOSTCC[@]|$HOSTCC|g" \
+			-e "s|@HOSTCXX[@]|$HOSTCXX|g" \
+			-e "s|@PATH[@]|$PATH|g"
+	done
+}
+
+CMD="${1}"
+PKG="${*:2}"
+
+case $CMD in
+	toolchain)
+		check_for_root
+		setup_architecture
+		setup_environment
+		build_environment
+#		build_toolchain
+		;;
+	bootstrap)
+		check_for_root
+		setup_architecture
+		setup_environment
+		build_environment
+#		build_toolchain
+#		build_chroot
+#		update_lunch
+		;;
+	usage|*)
+		usage
+esac
+
+exit 0
+
