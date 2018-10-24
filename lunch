@@ -56,6 +56,16 @@ pkginstalltwo() {
 	done
 }
 
+pkginstallforce() {
+	local pkg="$@"
+	for package in $pkg; do
+		printmsg "Building and installing package: '"$package"'"
+		cd $REPO/$package
+		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --force --noconfirm
+	done
+}
+
 pkginstallnodeps() {
 	local pkg="$@"
 	for package in $pkg; do
@@ -196,6 +206,7 @@ build_system() {
 }
 
 CMD="${1}"
+PKG="${*:2}"
 
 case $CMD in
 	toolchain)
@@ -214,6 +225,21 @@ case $CMD in
 		build_system
 #		build_repository
 #		build_image
+		;;
+	package)
+		for pkg in $PKG; do
+			pkginstall $pkg
+		done
+		;;
+	packagef)
+		for pkg in $PKG; do
+			pkginstallforce $pkg
+		done
+		;;
+	packagend)
+		for pkg in $PKG; do
+			pkginstallnodeps $pkg
+		done
 		;;
 	image)
 		;;
