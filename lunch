@@ -227,16 +227,25 @@ case $CMD in
 #		build_image
 		;;
 	package)
+		check_for_root
+		setup_architecture
+		setup_environment
 		for pkg in $PKG; do
 			pkginstall $pkg
 		done
 		;;
 	packagef)
+		check_for_root
+		setup_architecture
+		setup_environment
 		for pkg in $PKG; do
 			pkginstallforce $pkg
 		done
 		;;
 	packagend)
+		check_for_root
+		setup_architecture
+		setup_environment
 		for pkg in $PKG; do
 			pkginstallnodeps $pkg
 		done
