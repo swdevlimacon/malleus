@@ -42,6 +42,7 @@ pkginstall() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
 	done
 }
@@ -52,6 +53,7 @@ pkginstalltwo() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
 	done
 }
@@ -62,6 +64,7 @@ pkginstallforce() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --force --noconfirm
 	done
 }
@@ -72,6 +75,7 @@ pkginstallnodeps() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm -dd
 	done
 }
