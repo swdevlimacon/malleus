@@ -1,0 +1,103 @@
+#!/bin/bash
+#
+# LimaconLinux bootstrap software
+#
+
+set -e
+
+# Message commands
+printmsg() {
+	local msg=$(echo $1 | tr -s / /)
+	printf "\e[1m\e[32m==>\e[0m $msg\n"
+	sleep 1
+}
+
+printmsgerror() {
+	local msg=$(echo $1 | tr -s / /)
+	printf "\e[1m\e[31m==!\e[0m $msg\n"
+	sleep 1
+	exit 1
+}
+
+# Install package in filesystem root
+pkginstall() {
+	local pkg="$@"
+	for package in $pkg; do
+		printmsg "Building and installing package: '"$package"'"
+		cd $REPO/$package
+		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm
+	done
+}
+
+# Install chroot package in filesystem root
+pkgchinstall() {
+	local pkg="$@"
+	for package in $pkg; do
+		printmsg "Building and installing chroot package: '"$package"'"
+		cd $CHREPO/$package
+		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+	done
+}
+
+# Install toolchain package in toolchain root
+pkgtcinstall() {
+	local pkg="$@"
+	for package in $pkg; do
+		printmsg "Building and installing toolchain package: '"$package"'"
+		cd $TCREPO/$package
+		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $TOOLS --noconfirm
+	done
+}
+
+# Install native package in filesystem root
+pkgnativeinstall() {
+	local pkg="$@"
+
+	if [ "$NODEPS" = "true" ]; then
+		local depopt='-dd'
+	fi
+
+	if [ "$FOCRCE" = "true" ]; then
+		local forceopt='--force'
+	fi
+
+	for package in $pkg; do
+		printmsg "Building and installing package: '"$package"'"
+		cd /var/repo/$package
+		makepkg -c -C $depopt
+		pacman -U /output/$package-*.pkg.tar.xz --arch $BARCH --needed $depopt $forceopt --noconfirm
+	done
+}
+
+# Reinstall native package in filesystem root
+pkgnativereinstall() {
+	local pkg="$@"
+
+	if [ "$NODEPS" = "true" ]; then
+		local depopt='-dd'
+	fi
+
+	if [ "$FOCRCE" = "true" ]; then
+		local forceopt='--force'
+	fi
+
+	for package in $pkg; do
+		printmsg "Rebuilding and reinstalling package: '"$package"'"
+		rm -rf /output/$package-*.pkg.tar.xz
+		cd /var/repo/$package
+		makepkg -c -C --force $depopt
+		pacman -U /output/$package-*.pkg.tar.xz --arch $BARCH $depopt $forceopt --noconfirm
+	done
+}
+
+# Used to initialize pacman database
+initdb() {
+	local dir="$@"
+	for dbindir in $dir; do
+		printmsg "Database initialization in '"$dbindir"'"
+		mkdir -p $dbindir/var/lib/pacman
+	done
+}
