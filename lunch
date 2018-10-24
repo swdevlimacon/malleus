@@ -42,7 +42,7 @@ pkginstall() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
 	done
 }
 
@@ -52,7 +52,7 @@ pkginstalltwo() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
 	done
 }
 
@@ -62,7 +62,7 @@ pkginstallnodeps() {
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
 		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm -dd
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm -dd
 	done
 }
 
@@ -73,7 +73,7 @@ pkgtcinstall() {
 		printmsg "Building and installing toolchain package: '"$package"'"
 		cd $TCREPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
-		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --arch $BARCH --root $TOOLS --noconfirm
+		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --root $TOOLS --noconfirm
 		rm -rf $PACKAGES/host-$package-*.pkg.tar.xz
 	done
 }
