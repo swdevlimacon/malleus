@@ -206,7 +206,9 @@ build_toolchain() {
 }
 
 build_system() {
-	pkginstall libz
+	for pkg in libz m4 bison flex; do
+		pkginstall $pkg
+	done
 }
 
 CMD="${1}"

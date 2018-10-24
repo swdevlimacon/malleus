@@ -1,17 +1,16 @@
 # Maintainer: protonesso <nagakamira@gmail.com>
 # Contributor: protonesso <nagakamira@gmail.com>
 
-pkgname=libz
-pkgver=1.2.8.2015.12.26
+pkgname=m4
+pkgver=1.4.18
 pkgrel=1
-pkgdesc="An ABI-compatible and API-compatible drop-in replacement for zlib"
+pkgdesc="The GNU macro processor"
 arch=('riscv32' 'riscv64')
-url="http://sortix.org/libz/"
-license=('zlib')
-options=('staticlibs')
+url="http://www.gnu.org/software/m4"
+license=('GPL')
 depends=('musl')
-source=("https://sortix.org/$pkgname/release/$pkgname-$pkgver.tar.gz")
-md5sums=('aa5b869e8f62fdfe7f5ea3168372edb4')
+source=("http://ftpmirror.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.xz")
+md5sums=('730bb15d96fffe47e148d1e09235af82')
 
 build() {
 	cd $pkgname-$pkgver

@@ -9,6 +9,7 @@ arch=('riscv32' 'riscv64')
 url="http://www.musl-libc.org/"
 license=('MIT')
 options=('staticlibs' '!buildflags')
+depends=('filesystem')
 source=("https://github.com/michaelforney/musl/archive/$pkgver.tar.gz")
 md5sums=('SKIP')
 
