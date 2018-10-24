@@ -1,0 +1,26 @@
+# Maintainer: protonesso <nagakamira@gmail.com>
+# Contributor: protonesso <nagakamira@gmail.com>
+
+pkgname=libz
+pkgver=1.2.8.2015.12.26
+pkgrel=1
+pkgdesc="An ABI-compatible and API-compatible drop-in replacement for zlib"
+arch=('riscv32' 'riscv64')
+url="http://sortix.org/libz/"
+license=('zlib')
+source=("https://sortix.org/$pkgname/release/$pkgname-$pkgver.tar.gz")
+md5sums=('aa5b869e8f62fdfe7f5ea3168372edb4')
+
+build() {
+	cd $pkgname-$pkgver
+	./configure \
+		--prefix=/usr \
+		--build=$XHOST \
+		--host=$XTARGET
+	make
+}
+
+package() {
+	cd $pkgname-$pkgver
+	make DESTDIR=$pkgdir install
+}

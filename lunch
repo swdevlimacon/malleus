@@ -41,7 +41,7 @@ pkginstall() {
 	for package in $pkg; do
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
-		makepkg --config $BUILD/target-makepkg.conf -dd -c -C --skipinteg
+		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm
 	done
 }
@@ -51,7 +51,7 @@ pkginstallnodeps() {
 	for package in $pkg; do
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
-		makepkg --config $BUILD/target-makepkg.conf -dd -c -C --skipinteg
+		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
 		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm -dd
 	done
 }
@@ -63,7 +63,7 @@ pkgtcinstall() {
 		printmsg "Building and installing toolchain package: '"$package"'"
 		cd $TCREPO/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $TOOLS --noconfirm
+		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --arch $BARCH --root $TOOLS --noconfirm
 		rm -rf $PACKAGES/host-$package-*.pkg.tar.xz
 	done
 }
@@ -170,8 +170,22 @@ build_environment() {
 	done
 }
 
+build_toolchain() {
+	pkginstall filesystem
+	pkgtcinstall file
+	pkgtcinstall pkgconf
+	pkginstall linux-headers
+	pkgtcinstall binutils
+	pkgtcinstall gcc-static
+	pkginstall musl
+	pkgtcinstall gcc
+}
+
+build_system() {
+	pkginstall libz
+}
+
 CMD="${1}"
-PKG="${*:2}"
 
 case $CMD in
 	toolchain)
@@ -179,15 +193,15 @@ case $CMD in
 		setup_architecture
 		setup_environment
 		build_environment
-#		build_toolchain
+		build_toolchain
 		;;
 	system)
 		check_for_root
 		setup_architecture
 		setup_environment
 		build_environment
-#		build_toolchain
-#		build_system
+		build_toolchain
+		build_system
 #		build_repository
 #		build_image
 		;;

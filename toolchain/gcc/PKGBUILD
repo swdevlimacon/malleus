@@ -1,0 +1,58 @@
+pkgname=host-gcc
+pkgver=8.2.0
+gmpver=6.1.2
+mpfrver=4.0.1
+mpcver=1.1.0
+islver=0.19
+pkgrel=1
+arch=('any')
+source=("http://ftpmirror.gnu.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz"
+	"http://ftpmirror.gnu.org/gnu/gmp/gmp-$gmpver.tar.xz"
+	"http://www.mpfr.org/mpfr-$mpfrver/mpfr-$mpfrver.tar.xz"
+	"http://ftpmirror.gnu.org/gnu/mpc/mpc-$mpcver.tar.gz"
+	"http://isl.gforge.inria.fr/isl-$islver.tar.xz")
+
+prepare() {
+	cd gcc-$pkgver
+	sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+	mv ../gmp-$gmpver gmp
+	mv ../mpfr-$mpfrver mpfr
+	mv ../mpc-$mpcver mpc
+	mv ../isl-$islver isl
+
+	mkdir build
+}
+
+build() {
+	cd gcc-$pkgver
+	cd build
+	../configure \
+		--prefix='' \
+		--build=$XHOST \
+		--host=$XHOST \
+		--target=$XTARGET $GCCOPTS \
+		--with-sysroot=$ROOTFS \
+		--enable-__cxa_atexit \
+		--enable-checking=release \
+		--enable-clocale=generic \
+		--enable-languages=c,c++ \
+		--enable-linker-build-id \
+		--enable-shared \
+		--enable-threads=posix \
+		--enable-tls \
+		--disable-gnu-indirect-function \
+		--disable-libmpx \
+		--disable-libmudflap \
+		--disable-libsanitizer \
+		--disable-multilib \
+		--disable-nls \
+		--disable-symvers
+	make AS_FOR_TARGET="$XTARGET-as" LD_FOR_TARGET="$XTARGET-ld"
+}
+
+package() {
+	cd gcc-$pkgver
+	cd build
+	make -j1 DESTDIR=$pkgdir install
+}

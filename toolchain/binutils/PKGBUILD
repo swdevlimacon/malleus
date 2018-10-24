@@ -1,0 +1,35 @@
+pkgname=host-binutils
+pkgver=2.31.1
+pkgrel=1
+arch=('any')
+source=("http://ftpmirror.gnu.org/gnu/binutils/binutils-$pkgver.tar.xz")
+
+prepare() {
+	cd binutils-$pkgver
+	mkdir build
+}
+
+build() {
+	cd binutils-$pkgver
+	cd build
+	../configure \
+		--prefix='' \
+		--target=$XTARGET \
+		--with-sysroot="$ROOTFS" \
+		--with-lib-path="$ROOTFS/usr/lib" \
+		--enable-64-bit-bfd \
+		--enable-deterministic-archives \
+		--enable-gold=yes \
+		--enable-plugins \
+		--enable-threads \
+		--disable-multilib \
+		--disable-nls \
+		--disable-werro
+	make MAKEINFO="true"
+}
+
+package() {
+	cd binutils-$pkgver
+	cd build
+	make MAKEINFO="true" DESTDIR=$pkgdir install
+}
