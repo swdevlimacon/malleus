@@ -1,4 +1,4 @@
-pkgname=host-gcc-static
+pkgname=host-gcc
 pkgver=8.2.0
 gmpver=6.1.2
 mpfrver=4.0.1
@@ -15,6 +15,18 @@ source=("http://ftpmirror.gnu.org/gnu/gcc/gcc-$pkgver/gcc-$pkgver.tar.xz"
 prepare() {
 	cd gcc-$pkgver
 	sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+
+	for file in gcc/config/riscv/linux.h; do
+		cp -u $file{,.orig}
+		sed -e 's@/lib\(64\)\?\(32\)\?/ld@/tools&@g' \
+			-e 's@/usr@/tools@g' $file.orig > $file
+		echo '
+	#undef STANDARD_STARTFILE_PREFIX_1
+	#undef STANDARD_STARTFILE_PREFIX_2
+	#define STANDARD_STARTFILE_PREFIX_1 "/tools/lib/"
+	#define STANDARD_STARTFILE_PREFIX_2 ""' >> $file
+		touch $file.orig
+	done
 
 	mv ../gmp-$gmpver gmp
 	mv ../mpfr-$mpfrver mpfr
@@ -33,32 +45,28 @@ build() {
 		--host=$XHOST \
 		--target=$XTARGET $GCCOPTS \
 		--with-sysroot=$ROOTFS \
-		--with-newlib \
-		--without-headers \
+		--with-local-prefix=$ROOTFS/tools \
+		--with-native-system-header-dir=/tools/include \
+		--enable-__cxa_atexit \
+		--enable-checking=release \
 		--enable-clocale=generic \
-		--enable-languages=c \
+		--enable-languages=c,c++ \
 		--enable-linker-build-id \
-		--disable-decimal-float \
+		--enable-shared \
+		--enable-threads=posix \
+		--enable-tls \
 		--disable-gnu-indirect-function \
-		--disable-libatomic \
-		--disable-libcilkrts \
-		--disable-libgomp \
-		--disable-libitm \
 		--disable-libmpx \
-		--disable-libquadmath \
+		--disable-libmudflap \
 		--disable-libsanitizer \
-		--disable-libssp \
-		--disable-libstdcxx \
-		--disable-libvtv \
 		--disable-multilib \
 		--disable-nls \
-		--disable-shared \
-		--disable-threads
-	make all-gcc all-target-libgcc
+		--disable-symvers
+	make AS_FOR_TARGET="$XTARGET-as" LD_FOR_TARGET="$XTARGET-ld"
 }
 
 package() {
 	cd gcc-$pkgver
 	cd build
-	make -j1 DESTDIR=$pkgdir install-gcc install-target-libgcc
+	make -j1 DESTDIR=$pkgdir install
 }

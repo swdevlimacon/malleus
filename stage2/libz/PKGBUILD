@@ -1,0 +1,19 @@
+pkgname=chroot-libz
+pkgver=1.2.8.2015.12.26
+pkgrel=1
+arch=('riscv32' 'riscv64')
+source=("https://sortix.org/$pkgname/release/$pkgname-$pkgver.tar.gz")
+
+build() {
+	cd libz-$pkgver
+	./configure \
+		--prefix=/tools \
+		--build=$XHOST \
+		--host=$XTARGET
+	make
+}
+
+package() {
+	cd libz-$pkgver
+	make DESTDIR=$pkgdir install
+}

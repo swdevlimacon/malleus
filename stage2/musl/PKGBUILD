@@ -1,26 +1,18 @@
-# Maintainer: protonesso <nagakamira@gmail.com>
-# Contributor: protonesso <nagakamira@gmail.com>
-
 pkgname=musl
 pkgver=riscv
 pkgrel=1
-pkgdesc="Lightweight implementation of C standard library"
 arch=('riscv32' 'riscv64')
-url="http://www.musl-libc.org/"
-license=('MIT')
-options=('staticlibs' '!buildflags')
-depends=('filesystem')
+options=('!buildflags')
 source=("https://github.com/michaelforney/musl/archive/$pkgver.tar.gz")
-md5sums=('SKIP')
 
 build() {
 	unset HOSTCC HOSTCXX
 
-	cd $pkgname-$pkgver
+	cd musl-$pkgver
 	./configure \
 		CROSS_COMPILE=$XTARGET- \
-		--prefix=/usr \
-		--syslibdir=/usr/lib \
+		--prefix=/tools \
+		--syslibdir=/tools/lib \
 		--build=$XHOST \
 		--host=$XTARGET \
 		--target=$XTARGET
@@ -30,7 +22,7 @@ build() {
 package() {
 	unset HOSTCC HOSTCXX
 
-	cd $pkgname-$pkgver
+	cd musl-$pkgver
 	make DESTDIR=$pkgdir install
 
 	mkdir -p $pkgdir/usr/bin/

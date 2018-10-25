@@ -16,7 +16,7 @@ build() {
 		--prefix='' \
 		--target=$XTARGET \
 		--with-sysroot="$ROOTFS" \
-		--with-lib-path="$ROOTFS/usr/lib" \
+		--with-lib-path="$ROOTFS/tools/lib" \
 		--enable-64-bit-bfd \
 		--enable-deterministic-archives \
 		--enable-gold=yes \

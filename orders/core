@@ -1,0 +1,12 @@
+linux-headers
+musl
+libz
+m4
+bison
+flex
+gmp
+mpfr
+mpc
+isl
+binutils
+gcc

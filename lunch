@@ -9,16 +9,24 @@ set -e
 usage() {
 	cat <<EOF
 lunch - small and simple Limacon build system
-
+Host:
 Usage:	BARCH=[supported architecture] ./lunch [option]
-
-	toolchain		Build Limacon toolchain
-	system			Build Limacon system repository
-	image			Build Limacon image file
-	tarball			Build Limacon tarball
+	stage1			Build Limacon toolchain
+	stage2			Build Limacon chroot system
+	enter-chroot		Enter to the chroot system
+	tarball			Make tarball archive with filesystem
 	usage			Show this information
 	version			Show version information
-
+Target:
+Usage:	lunch [option] [package1, package2]
+	stage3			Rebuild chroot system for native system
+	stage4			Build native system
+	package			Build specific package
+	upackage		Update specific package
+	viewsums		View md5sums for specific package
+	order			Build specific group of packages
+	usage			Show this information
+	version			Show version information
 EOF
 	exit 0
 }
@@ -41,42 +49,31 @@ pkginstall() {
 	for package in $pkg; do
 		printmsg "Building and installing package: '"$package"'"
 		cd $REPO/$package
-		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
-		rm -rf $PACKAGES/*debug*.pkg.tar.xz
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/$package-*.pkg.tar.xz --root $ROOTFS --noconfirm
 	done
 }
 
-pkginstalltwo() {
+# Install chroot package in filesystem root
+pkgchinstall() {
 	local pkg="$@"
 	for package in $pkg; do
-		printmsg "Building and installing package: '"$package"'"
-		cd $REPO/$package
-		makepkg --config $BUILD/host-makepkg.conf -dd -c -C
-		rm -rf $PACKAGES/*debug*.pkg.tar.xz
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+		printmsg "Building and installing chroot package: '"$package"'"
+		cd $STAGE2/$package
+		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/chroot-$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+		rm -rf $PACKAGES/chroot-$package-*.pkg.tar.xz
 	done
 }
 
-pkginstallforce() {
+pkgchinstalltwo() {
 	local pkg="$@"
 	for package in $pkg; do
-		printmsg "Building and installing package: '"$package"'"
-		cd $REPO/$package
-		makepkg --config $BUILD/target-makepkg.conf -dd -c -C -f
-		rm -rf $PACKAGES/*debug*.pkg.tar.xz
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --force --noconfirm
-	done
-}
-
-pkginstallnodeps() {
-	local pkg="$@"
-	for package in $pkg; do
-		printmsg "Building and installing package: '"$package"'"
-		cd $REPO/$package
-		makepkg --config $BUILD/target-makepkg.conf -dd -c -C
-		rm -rf $PACKAGES/*debug*.pkg.tar.xz
-		pacman -U $PACKAGES/$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm -dd
+		printmsg "Building and installing chroot package: '"$package"'"
+		cd $STAGE2/$package
+		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
+		pacman -U $PACKAGES/chroot-$package-*.pkg.tar.xz --arch $BARCH --root $ROOTFS --noconfirm
+		rm -rf $PACKAGES/chroot-$package-*.pkg.tar.xz
 	done
 }
 
@@ -85,10 +82,66 @@ pkgtcinstall() {
 	local pkg="$@"
 	for package in $pkg; do
 		printmsg "Building and installing toolchain package: '"$package"'"
-		cd $TCREPO/$package
+		cd $STAGE1/$package
 		makepkg --config $BUILD/host-makepkg.conf -dd -c -C -f --skipinteg -f
-		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --root $TOOLS --force --noconfirm
+		pacman -U $PACKAGES/host-$package-*.pkg.tar.xz --root $TOOLS --noconfirm
 		rm -rf $PACKAGES/host-$package-*.pkg.tar.xz
+	done
+}
+
+# Install native package in filesystem root
+pkgnativeinstall() {
+	local pkg="$@"
+
+	if [ "$NODEPS" = "true" ]; then
+		local depopt='-dd'
+	fi
+
+	if [ "$FOCRCE" = "true" ]; then
+		local forceopt='--force'
+	fi
+
+	for package in $pkg; do
+		printmsg "Building and installing package: '"$package"'"
+		cd /var/repo/$package
+		makepkg -c -C $depopt
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
+		pacman -U /output/$package-*.pkg.tar.xz --arch $BARCH --needed $depopt $forceopt --noconfirm
+	done
+}
+
+# Reinstall native package in filesystem root
+pkgnativereinstall() {
+	local pkg="$@"
+
+	if [ "$NODEPS" = "true" ]; then
+		local depopt='-dd'
+	fi
+
+	if [ "$FOCRCE" = "true" ]; then
+		local forceopt='--force'
+	fi
+
+	for package in $pkg; do
+		printmsg "Rebuilding and reinstalling package: '"$package"'"
+		rm -rf /output/$package-*.pkg.tar.xz
+		cd /var/repo/$package
+		makepkg -c -C --force $depopt
+		rm -rf $PACKAGES/*debug*.pkg.tar.xz
+		pacman -U /output/$package-*.pkg.tar.xz --arch $BARCH $depopt $forceopt --noconfirm
+	done
+}
+
+# Install native package in filesystem root (stage 3)
+pkgnativeinstallstage3() {
+	local pkg="$@"
+
+	for package in $pkg; do
+		printmsg "Building and installing package: '"$package"'"
+		cd /var/stage3/$package
+		makepkg -c -C -dd --skipinteg -f
+		pacman -U /output/$package-*.pkg.tar.xz --arch $BARCH --needed -dd --force --noconfirm
+		rm -rf /output/$package-*.pkg.tar.xz
 	done
 }
 
@@ -137,7 +190,10 @@ setup_environment() {
 	# Common paths
 	export CWD="$(pwd)"
 	export REPO="$CWD/packages"
-	export TCREPO="$CWD/toolchain"
+	export STAGE1="$CWD/stage1"
+	export STAGE2="$CWD/stage2"
+	export STAGE3="$CWD/stage3"
+	export ORDERS="$CWD/orders"
 
 	# Build paths
 	export BUILD="$CWD/build-$BARCH"
@@ -170,8 +226,8 @@ build_environment() {
 
 	initdb $TOOLS $ROOTFS $TARBUILD $IMGBUILD
 
-	cp -a $TCREPO/makepkg.conf $BUILD/host-makepkg.conf
-	cp -a $REPO/makepkg.conf $BUILD/target-makepkg.conf
+	cp -a $STAGE1/makepkg.conf $BUILD/host-makepkg.conf
+	cp -a $STAGE2/makepkg.conf $BUILD/target-makepkg.conf
 
 	for files in $BUILD/host-makepkg.conf $BUILD/target-makepkg.conf; do
 		sed -i $files \
@@ -194,71 +250,64 @@ build_environment() {
 	done
 }
 
-build_toolchain() {
+build_stage1() {
 	pkginstall filesystem
 	pkgtcinstall file
 	pkgtcinstall pkgconf
-	pkginstalltwo linux-headers
+	pkgchinstalltwo linux-headers
 	pkgtcinstall binutils
 	pkgtcinstall gcc-static
-	pkginstalltwo musl
+	pkgchinstalltwo musl
 	pkgtcinstall gcc
 }
 
-build_system() {
-	for pkg in libz m4 bison flex; do
-		pkginstall $pkg
-	done
+build_stage2() {
+	pkgchinstall libz
+}
+
+update_lunch() {
+	mkdir -p $ROOTFS/usr/bin
+
+	cp $CWD/lunch $ROOTFS/usr/bin
 }
 
 CMD="${1}"
 PKG="${*:2}"
 
 case $CMD in
-	toolchain)
+	stage1)
+		check_for_root
+		setup_architecture
+		setup_environment
+		build_environment
+		build_stage1
+		;;
+	stage2)
 		check_for_root
 		setup_architecture
 		setup_environment
 		build_environment
 		build_toolchain
+		build_stage2
+		update_lunch
 		;;
-	system)
-		check_for_root
-		setup_architecture
-		setup_environment
-		build_environment
-		build_toolchain
-		build_system
-#		build_repository
-#		build_image
+	stage3)
 		;;
-	package)
-		check_for_root
-		setup_architecture
-		setup_environment
-		for pkg in $PKG; do
-			pkginstall $pkg
-		done
+	stage4)
 		;;
-	packagef)
-		check_for_root
-		setup_architecture
-		setup_environment
-		for pkg in $PKG; do
-			pkginstallforce $pkg
-		done
+	enter-chroot)
 		;;
-	packagend)
-		check_for_root
-		setup_architecture
-		setup_environment
-		for pkg in $PKG; do
-			pkginstallnodeps $pkg
-		done
+	tarball)
 		;;
 	image)
 		;;
-	tarball)
+	package)
+		;;
+	upackage)
+		;;
+	viewsums)
+		;;
+	order)
 		;;
 	version)
 		;;
