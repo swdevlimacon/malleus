@@ -10,9 +10,6 @@ source=(https://fastly.cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/$name-$versi
 
 build() {
 	cd $name-$version
-
-	export LD="$CC"
-
 	./configure $BUILDFLAGS \
 		--prefix=/usr \
 		--sysconfdir=/etc/ssh \
