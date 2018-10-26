@@ -1,0 +1,15 @@
+# Description: Header files for Linux kernel
+# URL:         https://www.kernel.org/
+# Maintainer:  protonesso, nagakamira at gmail dot com
+
+name=linux-headers
+version=for-next
+release=1
+source=(https://kernel.googlesource.com/pub/scm/linux/kernel/git/palmer/riscv-linux/+archive/$version.tar.gz)
+BOOTSTRAP=yes
+
+build() {
+	make mrproper $MKOPTS
+	make ARCH=$XKARCH INSTALL_HDR_PATH=$PKG/usr headers_install
+	find $PKG/usr/include -name .install -or -name ..install.cmd | xargs rm -rf
+}

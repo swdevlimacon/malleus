@@ -1,0 +1,58 @@
+# Description: The GNU Compiler Collection
+# URL:         http://gcc.gnu.org/
+# Maintainer:  protonesso, nagakamira at gmail dot com
+# Depends on:  binutils gmp mpfr mpc isl
+
+name=gcc
+version=8.2.0
+release=1
+source=(http://ftpmirror.gnu.org/gnu/$name/$name-$version/$name-$version.tar.xz)
+BOOTSTRAP=yes
+
+build() {
+	cd $name-$version
+	sed -i 's@\./fixinc\.sh@-c true@' gcc/Makefile.in
+	mkdir build
+	cd build
+	../configure $TOOLFLAGS $GCCOPTS \
+		--prefix=/usr \
+		--libdir=/usr/lib \
+		--libexecdir=/usr/lib \
+		--with-system-zlib \
+		--enable-__cxa_atexit \
+		--enable-checking=release \
+		--enable-clocale=generic \
+		--enable-languages=c,c++ \
+		--enable-install-libiberty \
+		--enable-linker-build-id \
+		--enable-shared \
+		--enable-threads=posix \
+		--enable-tls \
+		--disable-bootstrap \
+		--disable-gnu-indirect-function \
+		--disable-libmpx \
+		--disable-libmudflap \
+		--disable-libsanitizer \
+		--disable-libstdcxx-pch \
+		--disable-multilib \
+		--disable-nls \
+		--disable-symvers
+	make AS_FOR_TARGET="$AS" LD_FOR_TARGET="$LD"
+	make DESTDIR=$PKG install-strip
+
+	ln -s gcc $PKG/usr/bin/cc
+
+	ln -sf ../bin/cpp $pkgdir/usr/lib
+
+	install -dm755 $pkgdir/usr/lib/bfd-plugins
+	ln -sf /usr/lib/gcc/$XTARGET/8.2.0/liblto_plugin.so $pkgdir/usr/lib/bfd-plugins/
+
+	echo "Stripping $name package..."
+	find $PKG -type f | xargs file 2>/dev/null | grep "LSB executable"       | cut -f 1 -d : | xargs $STRIP --strip-all			2>/dev/null || true
+	find $PKG -type f | xargs file 2>/dev/null | grep "shared object"        | cut -f 1 -d : | xargs $STRIP --strip-unneeded		2>/dev/null || true
+	find $PKG -type f | xargs file 2>/dev/null | grep "current ar archive"   | cut -f 1 -d : | xargs $STRIP --strip-debug			2>/dev/null || true
+	find $PKG -type f | xargs file 2>/dev/null | grep "libtool library file" | cut -f 1 -d : | xargs rm -rf					2>/dev/null || true
+	cd $PKG
+	rm -rf {,usr/}{,local/}{,share/}{doc,man,info,locale} usr{,/local}{,/share},opt/*}/{man,info} usr/{,local/}{,share/}{doc,gtk-doc} opt/*/{doc,gtk-doc}
+	rm -rf {,usr/}lib/charset.alias
+}

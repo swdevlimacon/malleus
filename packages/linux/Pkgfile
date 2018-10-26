@@ -1,0 +1,28 @@
+# Description: The Linux kernel
+# URL:         https://www.kernel.org/
+# Maintainer:  protonesso, nagakamira at gmail dot com
+
+name=linux
+version=for-next
+release=1
+source=(https://kernel.googlesource.com/pub/scm/linux/kernel/git/palmer/riscv-linux/+archive/$version.tar.gz)
+BOOTSTRAP=yes
+
+build() {
+	make mrproper
+
+	case $BARCH in
+		riscv32)
+			cp $KEEP/linux/riscv32-config .config
+			;;
+		riscv64)
+			cp $KEEP/linux/riscv64-config .config
+			;;
+	esac
+
+	make ARCH=$XKARCH CROSS_COMPILE=$CROSS_COMPILE
+	make ARCH=$XKARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=$PKG/usr modules_install
+
+	mkdir -p $PKG/boot
+	cp vmlinux $PKG/boot/vmlinuz
+}

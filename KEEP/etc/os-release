@@ -1,0 +1,5 @@
+NAME="Malleus"
+ID="malleus"
+PRETTY_NAME="Malleus"
+HOME_URL="https://www.limacon-audio.com/malleus-a-compact-riscv-system/"
+BUG_REPORT_URL="https://github.com/limaconaudio/malleus/issues"
