@@ -1,10 +1,10 @@
-# Description: The GNU macro processor
-# URL:         http://www.gnu.org/software/m4
+# Description: The fast distributed version control system
+# URL:         https://git-scm.com/
 # Maintainer:  protonesso, nagakamira at gmail dot com
-# Depends on:  zlib curl
+# Depends on:  zlib curl expat
 
 name=git
-version=2.18.0
+version=2.19.1
 release=1
 source=(https://www.kernel.org/pub/software/scm/$name/$name-$version.tar.xz)
 BOOTSTRAP=yes
@@ -19,7 +19,6 @@ build() {
 		NO_TCLTK=1 \
 		NO_PYTHON=1 \
 		NO_GETTEXT=1 \
-		NO_EXPAT=1 \
 		all
 	make prefix=/usr gitexecdir=/usr/lib/git \
 		HOSTCC="$HOSTCC" CC="$CC" NEEDS_SSL_WITH_CURL="y" NEEDS_CRYPTO_WITH_SSL="y" NO_PERL="y" \
@@ -29,7 +28,6 @@ build() {
 		NO_TCLTK=1 \
 		NO_PYTHON=1 \
 		NO_GETTEXT=1 \
-		NO_EXPAT=1 \
 		DESTDIR=$PKG install
 
 	echo "Stripping $name package..."

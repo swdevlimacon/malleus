@@ -167,7 +167,7 @@ bootstrap_rootfs() {
 generate_stage_archive() {
 	printmsg "Building stage archive"
 
-	pkginstallstage filesystem linux-headers musl zlib m4 bison flex binutils gmp mpfr mpc isl gcc attr acl libcap pkgconf ncurses util-linux e2fsprogs libtool perl readline autoconf automake bash bc file kbd make xz patch busybox libressl ca-certificates linux curl libarchive git npkg prt-get
+	pkginstallstage filesystem linux-headers musl zlib m4 bison flex binutils gmp mpfr mpc isl gcc attr acl libcap pkgconf ncurses util-linux e2fsprogs libtool perl readline autoconf automake bash bc file kbd make xz patch busybox libressl ca-certificates linux expat curl libarchive git npkg prt-get
 
 	chown -R root:root $STAGE
 

@@ -13,15 +13,15 @@ build() {
 
 	case $BARCH in
 		riscv32)
-			cp $KEEP/linux/riscv32-config .config
+			cp $KEEP/linux/riscv32-config config
 			;;
 		riscv64)
-			cp $KEEP/linux/riscv64-config .config
+			cp $KEEP/linux/riscv64-config config
 			;;
 	esac
 
+	make ARCH=$XKARCH allnoconfig KCONFIG_ALLCONFIG=config
 	make ARCH=$XKARCH CROSS_COMPILE=$CROSS_COMPILE
-	make ARCH=$XKARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=$PKG/usr modules_install
 
 	mkdir -p $PKG/boot
 	cp vmlinux $PKG/boot/vmlinuz
