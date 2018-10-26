@@ -1,0 +1,26 @@
+# Description: A C99 library providing cross-platform audio input and output
+# URL:         http://libsound.io/
+# Maintainer:  protonesso, nagakamira at gmail dot com
+# Depends on:  cmake jack1
+
+name=libsoundio
+version=1.1.0
+release=1
+source=("https://github.com/andrewrk/$pkgname/archive/$pkgver.tar.gz")
+
+build() {
+
+    cd "$name-$version"
+    cmake \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=/usr \
+        -D CMAKE_INSTALL_LIBDIR=lib \
+        -D BUILD_EXAMPLE_PROGRAMS=OFF \
+        -D BUILD_TESTS=OFF \
+        -D BUILD_STATIC_LIBS=OFF \
+        -D ENABLE_JACK=ON
+		
+    make
+    make DESTDIR=$PKG install
+	
+}

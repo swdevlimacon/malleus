@@ -1,0 +1,24 @@
+# Description: A library for computing the discrete Fourier transform
+# URL:         http://www.fftw.org/
+# Maintainer:  protonesso, nagakamira at gmail dot com
+# Depends on:  
+
+name=fftw
+version=3.3.8
+release=1
+source=("http://www.fftw.org/$name-$version.tar.gz")
+
+build() {
+
+    cd "$name-$version"
+	./autogen.sh
+	./configure $BUILDFLAGS \
+            --prefix=/usr \
+		    --infodir=/usr/share/info \
+            --enable-type-prefix \
+            --enable-shared \
+            --enable-threads 
+    make
+    make DESTDIR=$PKG install
+	
+}

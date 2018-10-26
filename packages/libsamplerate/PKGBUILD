@@ -1,0 +1,18 @@
+# Description: A Sample Rate Converter for audio
+# URL:         http://www.mega-nerd.com/SRC/index.html
+# Maintainer:  protonesso, nagakamira at gmail dot com
+# Depends on:  libsndfile fftw
+
+name=libsamplerate
+version=master
+release=1
+source=("https://github.com/erikd/$name/archive/$version.tar.gz")
+
+build() {
+
+    cd "$name-$version"
+	./configure $BUILDFLAGS \
+            --prefix=/usr
+    make
+    make DESTDIR=$PKG install
+}

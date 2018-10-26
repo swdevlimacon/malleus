@@ -1,0 +1,20 @@
+# Description: A Sample Rate Converter for audio
+# URL:         http://www.mega-nerd.com/SRC/index.html
+# Maintainer:  protonesso, nagakamira at gmail dot com
+
+name=libsndfile
+release=1
+version=master
+source=("https://github.com/erikd/$name/archive/$version.tar.gz")
+
+build() {
+
+    cd "$name-$version"
+	./autogen.sh
+	./configure $BUILDFLAGS \
+            --prefix=/usr \
+			--disable-sqlite
+    make
+    make DESTDIR=$PKG install
+	
+}

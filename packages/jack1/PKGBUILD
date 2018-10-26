@@ -1,0 +1,26 @@
+# Description: A low-latency audio server
+# URL:         http://jackaudio.org
+# Maintainer:  protonesso, nagakamira at gmail dot com
+# Depends on:  libsamplerate
+
+name=jack1
+version=0.125.0
+release=1
+source=("https://github.com/jackaudio/$name/archive/$version.tar.gz")
+
+build() {
+
+    cd "$name-$version"
+	./autogen.sh
+	./configure $BUILDFLAGS \
+            --prefix=/usr
+			--libdir=/usr/lib
+    make
+    make DESTDIR=$PKG install
+	
+	# configure realtime access/scheduling
+    # see https://bugs.archlinux.org/task/26343
+    # install -Dm644 "$srcdir"/99-audio.conf "$pkgdir"/etc/security/limits.d/99-audio.conf
+    # install -Dm644 "$srcdir"/40-hpet-permissions.rules "$pkgdir"/usr/lib/udev/rules.d/40-hpet-permissions.rules
+	
+}
