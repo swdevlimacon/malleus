@@ -41,17 +41,14 @@ build() {
 	ln -sf ../run var/run
 	ln -sf ../run/lock var/lock
 
-	for d in bin include share/misc src; do
+	for d in bin include lib share/misc src; do
 		install -d -m755 usr/$d
 	done
 
 	if [ "$BARCH" = 'riscv64' ]; then
-		mkdir -p usr/lib64
-		ln -sf usr/lib64 lib64
-		ln -sf lib64 usr/lib
+		ln -sf lib usr/lib64
+		ln -sf usr/lib lib64
 		ln -sf . usr/lib64/lp64d
-	else
-		mkdir -p usr/lib
 	fi
 
 	ln -sf usr/lib lib
