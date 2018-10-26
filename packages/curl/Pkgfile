@@ -4,14 +4,13 @@
 # Depends on:  zlib libressl ca-certificates
 
 name=curl
-version=7.60.0
+version=7.61.1
 release=1
 source=(https://curl.haxx.se/download/$name-$version.tar.xz)
 BOOTSTRAP=yes
 
 build() {
 	cd $name-$version
-	patch -Np1 -i $KEEP/curl/use-OPENSSL_config.patch
 	./configure $BUILDFLAGS \
 		--prefix=/usr \
 		--with-ssl \
