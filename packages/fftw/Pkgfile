@@ -12,7 +12,6 @@ BOOTSTRAP=yes
 build() {
 
     cd "$name-$version"
-	./autogen.sh
 	./configure $BUILDFLAGS \
             --prefix=/usr \
 		    --infodir=/usr/share/info \
