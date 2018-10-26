@@ -1,7 +1,7 @@
 # Description: Library that can create and read several streaming archive formats
 # URL:         http://libarchive.org/
 # Maintainer:  protonesso, nagakamira at gmail dot com
-# Depends on:  musl zlib acl xz libressl
+# Depends on:  musl zlib acl xz libressl expat
 
 name=libarchive
 version=3.3.3
@@ -11,7 +11,6 @@ BOOTSTRAP=yes
 
 build() {
 	cd $name-$version
-	patch -Np1 -i $KEEP/libarchive/libressl-2.7.patch
 	./configure $BUILDFLAGS \
 		--prefix=/usr \
 		--libdir=/usr/lib \
@@ -19,8 +18,7 @@ build() {
 		--includedir=/usr/include \
 		--without-xml2 \
 		--without-iconv \
-		--without-nettle \
-		--without-expat
+		--without-nettle
 	make
 	make DESTDIR=$PKG install
 
