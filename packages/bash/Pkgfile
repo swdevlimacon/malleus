@@ -59,6 +59,9 @@ EOF
 	install -m644 $KEEP/bash/dot.bash_profile $PKG/etc/skel/.bash_profile
 	install -m644 $KEEP/bash/dot.bash_logout $PKG/etc/skel/.bash_logout
 
+	ln -sf bash $PKG/usr/bin/sh
+	ln -sf bash $PKG/usr/bin/rbash
+
 	echo "Stripping $name package..."
 	find $PKG -type f | xargs file 2>/dev/null | grep "LSB executable"       | cut -f 1 -d : | xargs $STRIP --strip-all			2>/dev/null || true
 	find $PKG -type f | xargs file 2>/dev/null | grep "shared object"        | cut -f 1 -d : | xargs $STRIP --strip-unneeded		2>/dev/null || true
