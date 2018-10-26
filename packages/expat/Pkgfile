@@ -6,6 +6,7 @@ name=expat
 version=2.2.5
 release=1
 source=(https://github.com/libexpat/libexpat/releases/download/R_${version//./_}/$name-$version.tar.bz2)
+BOOTSTRAP=yes
 
 build() {
 	cd $name-$version
