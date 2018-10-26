@@ -1,10 +1,10 @@
-# Description: A Sample Rate Converter for audio
-# URL:         http://www.mega-nerd.com/SRC/index.html
+# Description: C library for reading and writing files containing sampled sound
+# URL:         http://www.mega-nerd.com/libsndfile/
 # Maintainer:  protonesso, nagakamira at gmail dot com
 
 name=libsndfile
 release=1
-version=master
+version=1.0.28
 source=("https://github.com/erikd/$name/archive/$version.tar.gz")
 
 build() {
@@ -13,7 +13,7 @@ build() {
 	./autogen.sh
 	./configure $BUILDFLAGS \
             --prefix=/usr \
-			--disable-sqlite
+			--enable-werror
     make
     make DESTDIR=$PKG install
 	
