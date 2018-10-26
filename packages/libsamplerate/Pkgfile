@@ -4,7 +4,7 @@
 # Depends on:  libsndfile fftw
 
 name=libsamplerate
-version=$name
+version=master
 release=1
 source=("https://github.com/erikd/$name/archive/$version.tar.gz")
 BOOTSTRAP=yes
